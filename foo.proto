@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package main;
+
+option go_package = ".;main";
+
+import "bar.proto";
+
+message Foo {
+  string foo = 1;
+  Bar bar = 2;
+}

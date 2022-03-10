@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package main;
+
+option go_package = ".;main";
+
+message Bar {
+  string bar = 1;
+}
+
