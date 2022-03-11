@@ -26,7 +26,7 @@ func main() {
 }
 
 func messageBytes() []byte {
-	foo := &Foo{Foo: "bar"}
+	foo := &Foo{Foo: "foo", Bar: &Bar{Bar: "bar"}}
 	// any, err := anypb.New(foo)
 	// if err != nil {
 	// 	panic(err)
@@ -95,7 +95,7 @@ func exercise8() {
 		cel.TypeDescs(fileSet),
 		cel.Declarations(decls.NewVar("x", decls.NewObjectType(fooFullName))),
 	)
-	ast, iss := env.Compile(`x.foo`)
+	ast, iss := env.Compile(`x.foo + " and " + x.bar.bar`)
 	if iss.Err() != nil {
 		glog.Exit(iss.Err())
 	}
