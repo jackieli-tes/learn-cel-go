@@ -13,9 +13,10 @@ import (
 	"google.golang.org/protobuf/encoding/prototext"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 
 	"google.golang.org/protobuf/types/descriptorpb"
-	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/dynamicpb"
 )
 
 func main() {
@@ -26,11 +27,11 @@ func main() {
 
 func messageBytes() []byte {
 	foo := &Foo{Foo: "bar"}
-	any, err := anypb.New(foo)
-	if err != nil {
-		panic(err)
-	}
-	b, err := proto.Marshal(any)
+	// any, err := anypb.New(foo)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	b, err := proto.Marshal(foo)
 	if err != nil {
 		panic(err)
 	}
@@ -67,24 +68,27 @@ func exercise8() {
 	 * the following can be used to validate if fileSet is sufficient to
 	 * resolve message descriptor
 	 */
-	// reg, err := protodesc.NewFiles(fileSet)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// desc, err := reg.FindDescriptorByName(protoreflect.FullName(fooFullName))
-	// if err != nil {
-	// 	panic(err)
-	// }
+	reg, err := protodesc.NewFiles(fileSet)
+	if err != nil {
+		panic(err)
+	}
+	desc, err := reg.FindDescriptorByName(protoreflect.FullName(fooFullName))
+	if err != nil {
+		panic(err)
+	}
 
-	any := &anypb.Any{}
-	err = proto.Unmarshal(messageBytes(), any)
+	// typ := dynamicpb.NewMessageType(desc.(protoreflect.MessageDescriptor))
+	// msg := typ.New()
+	msg := dynamicpb.NewMessage(desc.(protoreflect.MessageDescriptor))
+
+	err = proto.Unmarshal(messageBytes(), msg.Interface())
 	if err != nil {
 		panic(err)
 	}
-	m, err := anypb.UnmarshalNew(any, proto.UnmarshalOptions{})
-	if err != nil {
-		panic(err)
-	}
+	// m, err := anypb.UnmarshalNew(msg, proto.UnmarshalOptions{})
+	// if err != nil {
+	// 	panic(err)
+	// }
 	// Declare the `x` and 'y' variables as input into the expression.
 	env, _ := cel.NewEnv(
 		// cel.TypeDescs(reg),
@@ -96,7 +100,7 @@ func exercise8() {
 		glog.Exit(iss.Err())
 	}
 	// Turn on optimization.
-	vars := map[string]interface{}{"x": m}
+	vars := map[string]interface{}{"x": msg}
 	program, _ := env.Program(ast, cel.EvalOptions(cel.OptExhaustiveEval))
 	// Try benchmarking this evaluation with the optimization flag on and off.
 	eval(program, vars)
