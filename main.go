@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/golang/glog"
 	"github.com/google/cel-go/cel"
 	"github.com/google/cel-go/checker/decls"
@@ -95,7 +96,7 @@ func exercise8() {
 		cel.TypeDescs(fileSet),
 		cel.Declarations(decls.NewVar("x", decls.NewObjectType(fooFullName))),
 	)
-	ast, iss := env.Compile(`x.foo + " and " + x.bar.bar`)
+	ast, iss := env.Compile(`x.bar`)
 	if iss.Err() != nil {
 		glog.Exit(iss.Err())
 	}
@@ -103,8 +104,14 @@ func exercise8() {
 	vars := map[string]interface{}{"x": msg}
 	program, _ := env.Program(ast, cel.EvalOptions(cel.OptExhaustiveEval))
 	// Try benchmarking this evaluation with the optimization flag on and off.
-	eval(program, vars)
-
+	out, _, _ := eval(program, vars)
+	b, err := proto.Marshal(out.Value().(proto.Message))
+	if err != nil {
+		panic(err)
+	}
+	var bar Bar
+	proto.Unmarshal(b, &bar)
+	spew.Dump(&bar)
 	// 	fmt.Println()
 }
 
